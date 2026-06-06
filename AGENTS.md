@@ -71,6 +71,7 @@ Wrapper:
 irm https://raw.githubusercontent.com/Karl0007/WishingFn/main/scripts/install/install.ps1 | iex
 irm https://raw.githubusercontent.com/Karl0007/WishingFn/main/scripts/install/update.ps1 | iex
 irm https://raw.githubusercontent.com/Karl0007/WishingFn/main/scripts/install/uninstall.ps1 | iex
+$env:WISHINGFN_PURGE_DATA="1"; irm https://raw.githubusercontent.com/Karl0007/WishingFn/main/scripts/install/uninstall.ps1 | iex
 ```
 
 Implementation: `scripts/install/install-latest-windows.ps1`.

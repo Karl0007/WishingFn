@@ -31,10 +31,16 @@ irm https://raw.githubusercontent.com/Karl0007/WishingFn/main/scripts/install/in
 irm https://raw.githubusercontent.com/Karl0007/WishingFn/main/scripts/install/update.ps1 | iex
 ```
 
-卸载并移除自启动：
+卸载并移除自启动（保留收藏数据）：
 
 ```powershell
 irm https://raw.githubusercontent.com/Karl0007/WishingFn/main/scripts/install/uninstall.ps1 | iex
+```
+
+彻底卸载（同时删除收藏数据）：
+
+```powershell
+$env:WISHINGFN_PURGE_DATA="1"; irm https://raw.githubusercontent.com/Karl0007/WishingFn/main/scripts/install/uninstall.ps1 | iex
 ```
 
 默认安装位置：

@@ -1,6 +1,7 @@
 $Action = if ($env:WISHINGFN_ACTION) { $env:WISHINGFN_ACTION } else { "install" }
 $InstallDir = if ($env:WISHINGFN_INSTALL_DIR) { $env:WISHINGFN_INSTALL_DIR } else { Join-Path $env:LOCALAPPDATA "WishingFn" }
 $Repository = if ($env:WISHINGFN_REPO) { $env:WISHINGFN_REPO } else { "Karl0007/WishingFn" }
+$PurgeData = $env:WISHINGFN_PURGE_DATA -in @("1", "true", "TRUE", "yes", "YES")
 $ErrorActionPreference = "Stop"
 
 if ($Action -notin @("install", "update", "uninstall")) {
@@ -75,6 +76,11 @@ if ($Action -eq "uninstall") {
     Stop-WishingFn
     Remove-Autostart
     Remove-Item -Recurse -Force $InstallDir -ErrorAction SilentlyContinue
+    if ($PurgeData) {
+        $DataDir = Join-Path $env:APPDATA "WishingFn"
+        Remove-Item -Recurse -Force $DataDir -ErrorAction SilentlyContinue
+        Write-Host "Removed WishingFn user data from $DataDir"
+    }
     Write-Host "WishingFn uninstalled from $InstallDir"
     exit 0
 }

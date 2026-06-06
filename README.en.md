@@ -31,10 +31,16 @@ Update:
 irm https://raw.githubusercontent.com/Karl0007/WishingFn/main/scripts/install/update.ps1 | iex
 ```
 
-Uninstall and remove autostart:
+Uninstall and remove autostart while keeping favorites data:
 
 ```powershell
 irm https://raw.githubusercontent.com/Karl0007/WishingFn/main/scripts/install/uninstall.ps1 | iex
+```
+
+Purge uninstall, including favorites data:
+
+```powershell
+$env:WISHINGFN_PURGE_DATA="1"; irm https://raw.githubusercontent.com/Karl0007/WishingFn/main/scripts/install/uninstall.ps1 | iex
 ```
 
 Default install location:
