@@ -16,10 +16,9 @@ pyinstaller --noconfirm --onedir --name WishingFn --paths "$Root" --hidden-impor
 $PackageDir = Join-Path $Root "dist\WishingFn"
 Copy-Item README.md $PackageDir -Force
 Copy-Item wishingfn.cmd $PackageDir -Force
-Copy-Item scripts\install-windows.ps1 $PackageDir -Force
-Copy-Item scripts\install-latest-windows.ps1 $PackageDir -Force
-Copy-Item install.ps1 $PackageDir -Force
-Copy-Item update.ps1 $PackageDir -Force
-Copy-Item uninstall.ps1 $PackageDir -Force
+Copy-Item scripts\install\install.ps1 $PackageDir -Force
+Copy-Item scripts\install\update.ps1 $PackageDir -Force
+Copy-Item scripts\install\uninstall.ps1 $PackageDir -Force
+Copy-Item scripts\install\install-latest-windows.ps1 $PackageDir -Force
 Compress-Archive -Force -Path (Join-Path $PackageDir "*") -DestinationPath (Join-Path $Root "dist\WishingFn-windows-x64-$Version.zip")
 Write-Host "Built dist\WishingFn-windows-x64-$Version.zip"

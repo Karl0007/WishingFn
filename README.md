@@ -1,62 +1,43 @@
-﻿# WishingFn
+# WishingFn
 
-WishingFn 是一个轻量的 CapsLock 增强工具：用 `CapsLock` 做功能层，快速移动光标/鼠标，并收藏、打开选中文字或剪贴板里的路径、网页和命令。
+[English](README.en.md) · [Agent Notes](AGENTS.md)
 
-## 给人类用户
+一个轻量、可打包发布的 CapsLock 功能层工具。WishingFn 用 Kanata 提供跨平台键盘层，用 Python 提供收藏夹、路径/网页打开和命令启动能力。
 
-### 快捷键
+> Windows 发布包内置 Kanata；用户不需要单独安装 Kanata。
 
-| 快捷键 | 功能 |
-| --- | --- |
-| 单击 `CapsLock` | 切换大小写 |
-| `CapsLock + w/a/s/d` | 上/左/下/右 |
-| `CapsLock + q/e` | Home / End |
-| `CapsLock + f` | Delete |
-| `CapsLock + Backspace` | Delete |
-| `CapsLock + 1..0,-,=` | F1..F12 |
-| `CapsLock + u/Space/o` | 左键 / 左键 / 右键 |
-| `CapsLock + i/j/k/l` | 鼠标移动 |
-| `CapsLock + c` | 收藏当前选中文字；没有选中时收藏剪贴板 |
-| `CapsLock + v` | 打开当前选中文字；没有选中时打开剪贴板 |
-| `CapsLock + x` | 打开收藏夹 |
+## 特性
 
-### 收藏夹
+- CapsLock 功能层：方向键、Home/End、Delete、F1-F12、鼠标移动和点击。
+- 选中文字优先：收藏/打开时优先使用当前选中文字，没有选中时回退到剪贴板。
+- 智能收藏：自动识别路径、网页 URL 和命令。
+- 收藏夹面板：支持打开、重命名别名、删除收藏。
+- Windows 一条命令安装：安装、更新、卸载都可通过远程脚本完成。
+- GitHub Releases：推送 tag 后自动构建 Windows 发布包。
 
-WishingFn 会自动识别三种收藏：
+## 安装
 
-- 路径：文件或文件夹
-- 网页：`http://` 或 `https://`
-- 命令：其他文本会作为命令执行
+### Windows
 
-收藏时会让你输入一个别名。收藏夹里可以：
-
-- 双击 / `Enter`：打开
-- `F2`：重命名别名
-- `Delete`：删除
-
-注意：命令会通过系统 shell 执行，只收藏你信任的命令。
-
-### Windows 安装
-
-一条命令安装、设置开机自启动并立即启动：
+安装、注册开机自启动并立即启动：
 
 ```powershell
-irm https://raw.githubusercontent.com/Karl0007/WishingFn/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/Karl0007/WishingFn/main/scripts/install/install.ps1 | iex
 ```
 
-更新到最新版：
+更新：
 
 ```powershell
-irm https://raw.githubusercontent.com/Karl0007/WishingFn/main/update.ps1 | iex
+irm https://raw.githubusercontent.com/Karl0007/WishingFn/main/scripts/install/update.ps1 | iex
 ```
 
 卸载并移除开机自启动：
 
 ```powershell
-irm https://raw.githubusercontent.com/Karl0007/WishingFn/main/uninstall.ps1 | iex
+irm https://raw.githubusercontent.com/Karl0007/WishingFn/main/scripts/install/uninstall.ps1 | iex
 ```
 
-安装位置：
+默认安装位置：
 
 ```text
 %LOCALAPPDATA%\WishingFn
@@ -64,20 +45,46 @@ irm https://raw.githubusercontent.com/Karl0007/WishingFn/main/uninstall.ps1 | ie
 
 ### macOS / Linux
 
-计划命令如下，但对应发布包还未启用：
+安装命令入口已预留，但 macOS/Linux 发布包还未启用：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Karl0007/WishingFn/main/install.sh | bash
-curl -fsSL https://raw.githubusercontent.com/Karl0007/WishingFn/main/install.sh | bash -s -- update
-curl -fsSL https://raw.githubusercontent.com/Karl0007/WishingFn/main/install.sh | bash -s -- uninstall
+curl -fsSL https://raw.githubusercontent.com/Karl0007/WishingFn/main/scripts/install/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Karl0007/WishingFn/main/scripts/install/install.sh | bash -s -- update
+curl -fsSL https://raw.githubusercontent.com/Karl0007/WishingFn/main/scripts/install/install.sh | bash -s -- uninstall
 ```
 
-目前 macOS/Linux 可先参考 `README-AGENT.md` 里的源码运行方式。
+## 快捷键
 
-## For English Readers
+| 快捷键 | 功能 |
+| --- | --- |
+| 单击 `CapsLock` | 切换大小写 |
+| `CapsLock + w/a/s/d` | 上 / 左 / 下 / 右 |
+| `CapsLock + q/e` | Home / End |
+| `CapsLock + f` | Delete |
+| `CapsLock + Backspace` | Delete |
+| `CapsLock + 1..0,-,=` | F1..F12 |
+| `CapsLock + u/Space/o` | 左键 / 左键 / 右键 |
+| `CapsLock + i/j/k/l` | 鼠标移动 |
+| `CapsLock + c` | 收藏选中文字；无选中时收藏剪贴板 |
+| `CapsLock + v` | 打开选中文字；无选中时打开剪贴板 |
+| `CapsLock + x` | 打开收藏夹 |
 
-See `README.en.md`.
+## 收藏夹
 
-## For Agents
+WishingFn 会把内容识别为：
 
-Implementation, packaging, release, and source-run details live in `README-AGENT.md`.
+- 路径：文件或文件夹
+- 网页：`http://` 或 `https://`
+- 命令：其他文本
+
+收藏时会要求输入别名。收藏夹面板支持：
+
+- 双击 / `Enter`：打开
+- `F2`：重命名别名
+- `Delete`：删除
+
+> 命令会通过系统 shell 执行，只收藏你信任的命令。
+
+## 开发与维护
+
+实现细节、打包流程、发布流程和 Agent 工作说明见 [AGENTS.md](AGENTS.md)。

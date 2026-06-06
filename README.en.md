@@ -1,10 +1,59 @@
-﻿# WishingFn
+# WishingFn
 
-WishingFn is a lightweight CapsLock enhancement tool. It uses `CapsLock` as a function layer for cursor/mouse control and for opening or favoriting selected text or clipboard content.
+[中文](README.md) · [Agent Notes](AGENTS.md)
 
-## For Humans
+A lightweight, packageable CapsLock function-layer tool. WishingFn uses Kanata for the keyboard layer and Python for favorites, path/URL opening, and command launching.
 
-### Hotkeys
+> The Windows package bundles Kanata; users do not need to install Kanata separately.
+
+## Features
+
+- CapsLock function layer: arrows, Home/End, Delete, F1-F12, mouse movement, and mouse clicks.
+- Selection-first actions: favorite/open selected text first, then fall back to clipboard.
+- Smart favorites: paths, URLs, and commands are detected automatically.
+- Favorites panel: open, rename aliases, and delete entries.
+- One-command Windows install: install, update, and uninstall through remote scripts.
+- GitHub Releases: pushing a tag builds the Windows package automatically.
+
+## Installation
+
+### Windows
+
+Install, register autostart, and start immediately:
+
+```powershell
+irm https://raw.githubusercontent.com/Karl0007/WishingFn/main/scripts/install/install.ps1 | iex
+```
+
+Update:
+
+```powershell
+irm https://raw.githubusercontent.com/Karl0007/WishingFn/main/scripts/install/update.ps1 | iex
+```
+
+Uninstall and remove autostart:
+
+```powershell
+irm https://raw.githubusercontent.com/Karl0007/WishingFn/main/scripts/install/uninstall.ps1 | iex
+```
+
+Default install location:
+
+```text
+%LOCALAPPDATA%\WishingFn
+```
+
+### macOS / Linux
+
+Installer entrypoints are reserved, but macOS/Linux packages are not enabled yet:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Karl0007/WishingFn/main/scripts/install/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Karl0007/WishingFn/main/scripts/install/install.sh | bash -s -- update
+curl -fsSL https://raw.githubusercontent.com/Karl0007/WishingFn/main/scripts/install/install.sh | bash -s -- uninstall
+```
+
+## Hotkeys
 
 | Hotkey | Action |
 | --- | --- |
@@ -20,7 +69,7 @@ WishingFn is a lightweight CapsLock enhancement tool. It uses `CapsLock` as a fu
 | `CapsLock + v` | Open selected text; falls back to clipboard |
 | `CapsLock + x` | Open favorites panel |
 
-### Favorites
+## Favorites
 
 WishingFn recognizes:
 
@@ -34,46 +83,8 @@ When adding a favorite, WishingFn asks for an alias. In the favorites panel:
 - `F2`: rename alias
 - `Delete`: delete
 
-Commands run through the system shell. Only favorite commands you trust.
+> Commands run through the system shell. Only favorite commands you trust.
 
-### Windows Install
+## Development
 
-Install, enable autostart, and start immediately:
-
-```powershell
-irm https://raw.githubusercontent.com/Karl0007/WishingFn/main/install.ps1 | iex
-```
-
-Update:
-
-```powershell
-irm https://raw.githubusercontent.com/Karl0007/WishingFn/main/update.ps1 | iex
-```
-
-Uninstall and remove autostart:
-
-```powershell
-irm https://raw.githubusercontent.com/Karl0007/WishingFn/main/uninstall.ps1 | iex
-```
-
-Install location:
-
-```text
-%LOCALAPPDATA%\WishingFn
-```
-
-### macOS / Linux
-
-Planned commands, pending published packages:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/Karl0007/WishingFn/main/install.sh | bash
-curl -fsSL https://raw.githubusercontent.com/Karl0007/WishingFn/main/install.sh | bash -s -- update
-curl -fsSL https://raw.githubusercontent.com/Karl0007/WishingFn/main/install.sh | bash -s -- uninstall
-```
-
-For now, use the source flow in `README-AGENT.md`.
-
-## For Agents
-
-Implementation, packaging, release, and source-run details live in `README-AGENT.md`.
+Implementation, packaging, release, and agent workflow details live in [AGENTS.md](AGENTS.md).

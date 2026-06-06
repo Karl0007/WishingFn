@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 ACTION="${1:-install}"
@@ -41,5 +41,6 @@ esac
 
 echo "WishingFn macOS/Linux packages are planned but not published yet."
 echo "Expected release asset pattern: $ASSET"
-echo "For now, use the source install flow in README-AGENT.md."
+echo "For now, use the source install flow in AGENTS.md."
 exit 1
+

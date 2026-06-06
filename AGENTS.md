@@ -1,4 +1,4 @@
-﻿# WishingFn Agent Notes
+# WishingFn Agent Notes
 
 This file is for coding agents and maintainers. Human-facing usage lives in `README.md` and `README.en.md`.
 
@@ -68,23 +68,23 @@ This copies the built package to `%LOCALAPPDATA%\WishingFn`, registers autostart
 Wrapper:
 
 ```powershell
-irm https://raw.githubusercontent.com/Karl0007/WishingFn/main/install.ps1 | iex
-irm https://raw.githubusercontent.com/Karl0007/WishingFn/main/update.ps1 | iex
-irm https://raw.githubusercontent.com/Karl0007/WishingFn/main/uninstall.ps1 | iex
+irm https://raw.githubusercontent.com/Karl0007/WishingFn/main/scripts/install/install.ps1 | iex
+irm https://raw.githubusercontent.com/Karl0007/WishingFn/main/scripts/install/update.ps1 | iex
+irm https://raw.githubusercontent.com/Karl0007/WishingFn/main/scripts/install/uninstall.ps1 | iex
 ```
 
-Implementation: `scripts/install-latest-windows.ps1`.
+Implementation: `scripts/install/install-latest-windows.ps1`.
 
 The installer downloads the latest GitHub Release asset matching `WishingFn-windows-x64-*.zip`.
 
 ## macOS / Linux Status
 
-`install.sh` defines the intended command shape, but release artifacts are not implemented yet:
+`scripts/install/install.sh` defines the intended command shape, but release artifacts are not implemented yet:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Karl0007/WishingFn/main/install.sh | bash
-curl -fsSL https://raw.githubusercontent.com/Karl0007/WishingFn/main/install.sh | bash -s -- update
-curl -fsSL https://raw.githubusercontent.com/Karl0007/WishingFn/main/install.sh | bash -s -- uninstall
+curl -fsSL https://raw.githubusercontent.com/Karl0007/WishingFn/main/scripts/install/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Karl0007/WishingFn/main/scripts/install/install.sh | bash -s -- update
+curl -fsSL https://raw.githubusercontent.com/Karl0007/WishingFn/main/scripts/install/install.sh | bash -s -- uninstall
 ```
 
 To complete macOS/Linux packages, add platform-specific Kanata binaries under `vendor/kanata/kanata`, build with PyInstaller/codesign equivalents, and extend `.github/workflows/release.yml` with Linux/macOS jobs.
