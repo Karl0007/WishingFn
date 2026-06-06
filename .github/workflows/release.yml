@@ -28,8 +28,8 @@ jobs:
           New-Item -ItemType Directory -Force vendor\kanata | Out-Null
           Invoke-WebRequest -Uri "https://github.com/jtroo/kanata/releases/download/v1.11.0/windows-binaries-x64.zip" -OutFile "$env:TEMP\kanata.zip"
           Expand-Archive -Force "$env:TEMP\kanata.zip" "$env:TEMP\kanata"
-          $exe = Get-ChildItem "$env:TEMP\kanata" -Recurse -Filter "*.exe" | Where-Object { $_.Name -match "cmd_allowed" -and $_.Name -match "winIOv2" -and $_.Name -match "tty" } | Select-Object -First 1
-          if (-not $exe) { throw "Kanata cmd_allowed winIOv2 TTY binary not found" }
+          $exe = Get-ChildItem "$env:TEMP\kanata" -Recurse -Filter "*.exe" | Where-Object { $_.Name -match "cmd_allowed" -and $_.Name -match "winIOv2" -and $_.Name -match "gui" } | Select-Object -First 1
+          if (-not $exe) { throw "Kanata cmd_allowed winIOv2 GUI binary not found" }
           Copy-Item $exe.FullName vendor\kanata\kanata.exe -Force
 
       - name: Build package

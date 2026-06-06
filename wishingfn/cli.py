@@ -151,16 +151,20 @@ def copy_selection_to_clipboard() -> None:
     raise RuntimeError("No supported selection copy command found.")
 
 
-def read_selected_text(timeout: float = 0.6) -> str:
+def read_selected_text(timeout: float = 0.8) -> str:
     previous = ""
     try:
         previous = read_clipboard()
     except Exception:
         previous = ""
-    copy_selection_to_clipboard()
+
+    try:
+        copy_selection_to_clipboard()
+    except Exception:
+        return ""
+
     deadline = time.monotonic() + timeout
-    selected = ""
-    last_seen = ""
+    latest = ""
     while time.monotonic() < deadline:
         time.sleep(0.05)
         try:
@@ -168,18 +172,17 @@ def read_selected_text(timeout: float = 0.6) -> str:
         except Exception:
             continue
         if current:
-            last_seen = current
+            latest = current
         if current and current != previous:
-            selected = current
             break
-    if not selected and last_seen and last_seen == previous:
-        selected = last_seen
+
     if previous:
         try:
             write_clipboard(previous)
         except Exception:
             pass
-    return selected
+
+    return latest
 
 
 def read_target_text() -> str:
