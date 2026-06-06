@@ -23,10 +23,10 @@
   fav-add (cmd wishingfn add-clipboard)
   clip-open (cmd wishingfn open-clipboard)
   fav-menu (cmd wishingfn menu)
-  ms-up (movemouse-accel-up 1 500 2 20)
-  ms-left (movemouse-accel-left 1 500 2 20)
-  ms-down (movemouse-accel-down 1 500 2 20)
-  ms-right (movemouse-accel-right 1 500 2 20)
+  ms-up (movemouse-accel-up 1 125 2 20)
+  ms-left (movemouse-accel-left 1 125 2 20)
+  ms-down (movemouse-accel-down 1 125 2 20)
+  ms-right (movemouse-accel-right 1 125 2 20)
 )
 
 (deflayer base

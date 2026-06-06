@@ -5,6 +5,7 @@ import platform
 import shutil
 import subprocess
 import sys
+import time
 import webbrowser
 from dataclasses import dataclass
 from pathlib import Path
@@ -100,6 +101,89 @@ def read_clipboard() -> str:
     raise RuntimeError("No supported clipboard command found.")
 
 
+def write_clipboard(text: str) -> None:
+    system = platform.system()
+    if system == "Windows":
+        from tkinter import Tk
+
+        root = Tk()
+        root.withdraw()
+        root.clipboard_clear()
+        root.clipboard_append(text)
+        root.update()
+        root.destroy()
+        return
+    if system == "Darwin" and shutil.which("pbcopy"):
+        subprocess.run(["pbcopy"], input=text, text=True, check=True)
+        return
+    if shutil.which("wl-copy"):
+        subprocess.run(["wl-copy"], input=text, text=True, check=True)
+        return
+    if shutil.which("xclip"):
+        subprocess.run(["xclip", "-selection", "clipboard"], input=text, text=True, check=True)
+        return
+    if shutil.which("xsel"):
+        subprocess.run(["xsel", "--clipboard", "--input"], input=text, text=True, check=True)
+        return
+    raise RuntimeError("No supported clipboard writer found.")
+
+
+def copy_selection_to_clipboard() -> None:
+    system = platform.system()
+    if system == "Windows":
+        import ctypes
+
+        user32 = ctypes.windll.user32
+        user32.keybd_event(0x11, 0, 0, 0)
+        user32.keybd_event(0x43, 0, 0, 0)
+        user32.keybd_event(0x43, 0, 2, 0)
+        user32.keybd_event(0x11, 0, 2, 0)
+        return
+    if system == "Darwin":
+        subprocess.run(["osascript", "-e", 'tell application "System Events" to keystroke "c" using command down'], check=False)
+        return
+    if shutil.which("ydotool"):
+        subprocess.run(["ydotool", "key", "29:1", "46:1", "46:0", "29:0"], check=False)
+        return
+    if shutil.which("xdotool"):
+        subprocess.run(["xdotool", "key", "ctrl+c"], check=False)
+        return
+    raise RuntimeError("No supported selection copy command found.")
+
+
+def read_selected_text(timeout: float = 0.35) -> str:
+    previous = ""
+    try:
+        previous = read_clipboard()
+    except Exception:
+        previous = ""
+    copy_selection_to_clipboard()
+    deadline = time.monotonic() + timeout
+    selected = ""
+    while time.monotonic() < deadline:
+        time.sleep(0.05)
+        try:
+            current = read_clipboard()
+        except Exception:
+            continue
+        if current and current != previous:
+            selected = current
+            break
+    if previous:
+        try:
+            write_clipboard(previous)
+        except Exception:
+            pass
+    return selected
+
+
+def read_target_text() -> str:
+    selected = read_selected_text()
+    if selected:
+        return selected
+    return read_clipboard()
+
+
 def infer_kind(value: str) -> str:
     if looks_like_url(value):
         return "url"
@@ -177,9 +261,9 @@ def ask_label(default: str) -> str:
 
 
 def add_clipboard() -> int:
-    value = read_clipboard()
+    value = read_target_text()
     if not value:
-        notify("WishingFn", "Clipboard is empty.")
+        notify("WishingFn", "Selection and clipboard are empty.")
         return 1
     kind = infer_kind(value)
     favorites = load_favorites()
@@ -194,9 +278,9 @@ def add_clipboard() -> int:
 
 
 def open_clipboard() -> int:
-    value = read_clipboard()
+    value = read_target_text()
     if not value:
-        notify("WishingFn", "Clipboard is empty.")
+        notify("WishingFn", "Selection and clipboard are empty.")
         return 1
     return open_value(value, infer_kind(value))
 
