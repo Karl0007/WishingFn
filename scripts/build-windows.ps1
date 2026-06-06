@@ -11,7 +11,7 @@ if (Test-Path dist) { Remove-Item -Recurse -Force dist }
 if (Test-Path build) { Remove-Item -Recurse -Force build }
 if (Test-Path WishingFn.spec) { Remove-Item -Force WishingFn.spec }
 
-pyinstaller --noconfirm --onedir --name WishingFn --paths "$Root" --hidden-import wishingfn.cli --add-data "config;config" --add-data "vendor;vendor" scripts\wishingfn_entry.py
+pyinstaller --noconfirm --onedir --noconsole --name WishingFn --paths "$Root" --hidden-import wishingfn.cli --add-data "config;config" --add-data "vendor;vendor" scripts\wishingfn_entry.py
 
 $PackageDir = Join-Path $Root "dist\WishingFn"
 Copy-Item README.md $PackageDir -Force

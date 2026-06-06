@@ -151,7 +151,7 @@ def copy_selection_to_clipboard() -> None:
     raise RuntimeError("No supported selection copy command found.")
 
 
-def read_selected_text(timeout: float = 0.35) -> str:
+def read_selected_text(timeout: float = 0.6) -> str:
     previous = ""
     try:
         previous = read_clipboard()
@@ -160,15 +160,20 @@ def read_selected_text(timeout: float = 0.35) -> str:
     copy_selection_to_clipboard()
     deadline = time.monotonic() + timeout
     selected = ""
+    last_seen = ""
     while time.monotonic() < deadline:
         time.sleep(0.05)
         try:
             current = read_clipboard()
         except Exception:
             continue
+        if current:
+            last_seen = current
         if current and current != previous:
             selected = current
             break
+    if not selected and last_seen and last_seen == previous:
+        selected = last_seen
     if previous:
         try:
             write_clipboard(previous)
@@ -247,7 +252,7 @@ def default_label(kind: str, value: str) -> str:
     return value.splitlines()[0][:80]
 
 
-def ask_label(default: str) -> str:
+def ask_label(default: str) -> str | None:
     try:
         from tkinter import Tk, simpledialog
 
@@ -255,7 +260,10 @@ def ask_label(default: str) -> str:
         root.withdraw()
         label = simpledialog.askstring("WishingFn", "Alias / display name:", initialvalue=default)
         root.destroy()
-        return (label or default).strip()
+        if label is None:
+            return None
+        label = label.strip()
+        return label or default
     except Exception:
         return default
 
@@ -271,6 +279,8 @@ def add_clipboard() -> int:
         notify("WishingFn", "Already favorited.")
         return 0
     label = ask_label(default_label(kind, value))
+    if label is None:
+        return 0
     favorites.append(Favorite(kind=kind, value=value, label=label))
     save_favorites(favorites)
     notify("WishingFn", f"Favorited {kind}: {label}")
@@ -311,7 +321,7 @@ def open_path(path: Path) -> None:
 
 def run_command(command: str) -> int:
     if platform.system() == "Windows":
-        subprocess.Popen(command, shell=True, creationflags=subprocess.CREATE_NEW_CONSOLE)
+        subprocess.Popen(command, shell=True, creationflags=subprocess.CREATE_NO_WINDOW)
     else:
         subprocess.Popen(command, shell=True, start_new_session=True)
     return 0
@@ -396,6 +406,8 @@ def menu() -> int:
 
 
 def notify(title: str, message: str) -> None:
+    if os.environ.get("WISHINGFN_QUIET") == "1":
+        return
     try:
         from tkinter import Tk, messagebox
 
@@ -421,6 +433,9 @@ def run_kanata() -> int:
         raise RuntimeError(f"Kanata config not found: {config}")
     env = os.environ.copy()
     env["PATH"] = str(app_root()) + os.pathsep + env.get("PATH", "")
+    if platform.system() == "Windows":
+        process = subprocess.Popen([str(kanata), "--cfg", str(config)], env=env, creationflags=subprocess.CREATE_NO_WINDOW)
+        return process.wait()
     return subprocess.call([str(kanata), "--cfg", str(config)], env=env)
 
 
@@ -437,7 +452,7 @@ def install_autostart() -> int:
     exe = Path(sys.executable).resolve() if getattr(sys, "frozen", False) else Path(sys.argv[0]).resolve()
     startup_file = windows_startup_file()
     startup_file.parent.mkdir(parents=True, exist_ok=True)
-    startup_file.write_text(f'@echo off\r\nstart "" "{exe}" run-kanata\r\n', encoding="utf-8")
+    startup_file.write_text(f'@echo off\r\nstart "" /min "{exe}" run-kanata\r\n', encoding="utf-8")
     notify("WishingFn", f"Installed Windows autostart shortcut: {startup_file}")
     return 0
 
@@ -460,8 +475,8 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser("menu", help="Open the favorites panel.")
     subparsers.add_parser("config-path", help="Print the favorites file path.")
     subparsers.add_parser("run-kanata", help="Run bundled Kanata with WishingFn config.")
-    subparsers.add_parser("install-autostart", help="Install WishingFn as a Windows logon task.")
-    subparsers.add_parser("uninstall-autostart", help="Remove the Windows logon task.")
+    subparsers.add_parser("install-autostart", help="Install WishingFn Windows autostart.")
+    subparsers.add_parser("uninstall-autostart", help="Remove WishingFn Windows autostart.")
     return parser
 
 

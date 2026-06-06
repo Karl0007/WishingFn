@@ -58,7 +58,12 @@ function Install-Or-Update {
 
         $Exe = Join-Path $InstallDir "WishingFn.exe"
         Write-Host "Registering autostart..."
-        & $Exe install-autostart
+        $env:WISHINGFN_QUIET = "1"
+        try {
+            & $Exe install-autostart
+        } finally {
+            Remove-Item Env:\WISHINGFN_QUIET -ErrorAction SilentlyContinue
+        }
 
         Write-Host "Starting WishingFn..."
         Start-Process -FilePath $Exe -ArgumentList "run-kanata" -WorkingDirectory $InstallDir | Out-Null
