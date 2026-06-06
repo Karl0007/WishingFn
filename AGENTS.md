@@ -61,7 +61,7 @@ dist\WishingFn-windows-x64-0.1.0.zip
 .\scripts\install-windows.ps1
 ```
 
-This copies the built package to `%LOCALAPPDATA%\WishingFn`, registers autostart, and prints the manual start command.
+This copies the built package to `%LOCALAPPDATA%\WishingFn`, creates a user Startup-folder autostart shortcut, and prints the manual start command.
 
 ## Remote Windows Install / Update / Uninstall
 

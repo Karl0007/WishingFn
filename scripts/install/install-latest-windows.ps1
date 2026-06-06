@@ -12,6 +12,8 @@ function Stop-WishingFn {
 }
 
 function Remove-Autostart {
+    $StartupFile = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs\Startup\WishingFn.cmd"
+    Remove-Item -Force $StartupFile -ErrorAction SilentlyContinue
     $PreviousPreference = $ErrorActionPreference
     $ErrorActionPreference = "Continue"
     cmd /c "schtasks /Delete /TN WishingFn /F >nul 2>nul" | Out-Null
@@ -60,7 +62,8 @@ function Install-Or-Update {
         Write-Host "Starting WishingFn..."
         Start-Process -FilePath $Exe -ArgumentList "run-kanata" -WorkingDirectory $InstallDir | Out-Null
 
-        Write-Host "WishingFn $($Verb.ToLower())ed and started."
+        $Done = if ($Action -eq "update") { "updated" } else { "installed" }
+        Write-Host "WishingFn $Done and started."
         Write-Host "Installed path: $InstallDir"
     } finally {
         Remove-Item -Recurse -Force $TempRoot -ErrorAction SilentlyContinue

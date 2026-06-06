@@ -1,4 +1,4 @@
-﻿import argparse
+import argparse
 import json
 import os
 import platform
@@ -424,35 +424,31 @@ def run_kanata() -> int:
     return subprocess.call([str(kanata), "--cfg", str(config)], env=env)
 
 
+def windows_startup_file() -> Path:
+    startup_dir = Path(os.environ["APPDATA"]) / "Microsoft" / "Windows" / "Start Menu" / "Programs" / "Startup"
+    return startup_dir / "WishingFn.cmd"
+
+
 def install_autostart() -> int:
     system = platform.system()
     if system != "Windows":
         notify("WishingFn", "Autostart installer currently supports Windows. Use the README commands for macOS/Linux.")
         return 1
     exe = Path(sys.executable).resolve() if getattr(sys, "frozen", False) else Path(sys.argv[0]).resolve()
-    command = f'"{exe}" run-kanata'
-    subprocess.run([
-        "schtasks",
-        "/Create",
-        "/TN",
-        "WishingFn",
-        "/TR",
-        command,
-        "/SC",
-        "ONLOGON",
-        "/RL",
-        "HIGHEST",
-        "/F",
-    ], check=True)
-    notify("WishingFn", "Installed Windows autostart task: WishingFn")
+    startup_file = windows_startup_file()
+    startup_file.parent.mkdir(parents=True, exist_ok=True)
+    startup_file.write_text(f'@echo off\r\nstart "" "{exe}" run-kanata\r\n', encoding="utf-8")
+    notify("WishingFn", f"Installed Windows autostart shortcut: {startup_file}")
     return 0
 
 
 def uninstall_autostart() -> int:
     if platform.system() != "Windows":
         return 1
-    subprocess.run(["schtasks", "/Delete", "/TN", "WishingFn", "/F"], check=False)
-    notify("WishingFn", "Removed Windows autostart task: WishingFn")
+    startup_file = windows_startup_file()
+    startup_file.unlink(missing_ok=True)
+    subprocess.run(["cmd", "/c", "schtasks /Delete /TN WishingFn /F >nul 2>nul"], check=False)
+    notify("WishingFn", "Removed Windows autostart shortcut: WishingFn")
     return 0
 
 
