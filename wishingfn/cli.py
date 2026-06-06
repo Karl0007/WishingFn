@@ -452,26 +452,73 @@ def windows_startup_file() -> Path:
 
 def install_autostart() -> int:
     system = platform.system()
-    if system != "Windows":
-        notify("WishingFn", "Autostart installer currently supports Windows. Use the README commands for macOS/Linux.")
-        return 1
     exe = Path(sys.executable).resolve() if getattr(sys, "frozen", False) else Path(sys.argv[0]).resolve()
-    startup_file = windows_startup_file()
-    startup_file.parent.mkdir(parents=True, exist_ok=True)
-    startup_file.write_text(f'@echo off\r\nstart "" /min "{exe}" run-kanata\r\n', encoding="utf-8")
-    notify("WishingFn", f"Installed Windows autostart shortcut: {startup_file}")
+    if system == "Windows":
+        startup_file = windows_startup_file()
+        startup_file.parent.mkdir(parents=True, exist_ok=True)
+        startup_file.write_text(f'@echo off\r\nstart "" /min "{exe}" run-kanata\r\n', encoding="utf-8")
+        notify("WishingFn", f"Installed Windows autostart shortcut: {startup_file}")
+        return 0
+    if system == "Darwin":
+        plist = Path.home() / "Library" / "LaunchAgents" / "com.karl0007.wishingfn.plist"
+        plist.parent.mkdir(parents=True, exist_ok=True)
+        plist.write_text(f'''<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.karl0007.wishingfn</string>
+  <key>ProgramArguments</key>
+  <array><string>{exe}</string><string>run-kanata</string></array>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>StandardOutPath</key><string>/tmp/wishingfn.out</string>
+  <key>StandardErrorPath</key><string>/tmp/wishingfn.err</string>
+</dict>
+</plist>
+''', encoding="utf-8")
+        subprocess.run(["launchctl", "unload", str(plist)], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(["launchctl", "load", str(plist)], check=False)
+        notify("WishingFn", f"Installed macOS LaunchAgent: {plist}")
+        return 0
+    service = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "systemd" / "user" / "wishingfn.service"
+    service.parent.mkdir(parents=True, exist_ok=True)
+    service.write_text(f'''[Unit]
+Description=WishingFn
+
+[Service]
+ExecStart={exe} run-kanata
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=default.target
+''', encoding="utf-8")
+    subprocess.run(["systemctl", "--user", "daemon-reload"], check=False)
+    subprocess.run(["systemctl", "--user", "enable", "--now", "wishingfn.service"], check=False)
+    notify("WishingFn", f"Installed Linux systemd user service: {service}")
     return 0
 
 
 def uninstall_autostart() -> int:
-    if platform.system() != "Windows":
-        return 1
-    startup_file = windows_startup_file()
-    startup_file.unlink(missing_ok=True)
-    subprocess.run(["cmd", "/c", "schtasks /Delete /TN WishingFn /F >nul 2>nul"], check=False)
-    notify("WishingFn", "Removed Windows autostart shortcut: WishingFn")
+    system = platform.system()
+    if system == "Windows":
+        startup_file = windows_startup_file()
+        startup_file.unlink(missing_ok=True)
+        subprocess.run(["cmd", "/c", "schtasks /Delete /TN WishingFn /F >nul 2>nul"], check=False)
+        notify("WishingFn", "Removed Windows autostart shortcut: WishingFn")
+        return 0
+    if system == "Darwin":
+        plist = Path.home() / "Library" / "LaunchAgents" / "com.karl0007.wishingfn.plist"
+        subprocess.run(["launchctl", "unload", str(plist)], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        plist.unlink(missing_ok=True)
+        notify("WishingFn", "Removed macOS LaunchAgent: com.karl0007.wishingfn")
+        return 0
+    service = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "systemd" / "user" / "wishingfn.service"
+    subprocess.run(["systemctl", "--user", "disable", "--now", "wishingfn.service"], check=False)
+    service.unlink(missing_ok=True)
+    subprocess.run(["systemctl", "--user", "daemon-reload"], check=False)
+    notify("WishingFn", "Removed Linux systemd user service: wishingfn")
     return 0
-
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="wishingfn", description="Lightweight favorites and clipboard opener for MagicFn-style workflows.")
@@ -481,8 +528,8 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser("menu", help="Open the favorites panel.")
     subparsers.add_parser("config-path", help="Print the favorites file path.")
     subparsers.add_parser("run-kanata", help="Run bundled Kanata with WishingFn config.")
-    subparsers.add_parser("install-autostart", help="Install WishingFn Windows autostart.")
-    subparsers.add_parser("uninstall-autostart", help="Remove WishingFn Windows autostart.")
+    subparsers.add_parser("install-autostart", help="Install WishingFn autostart.")
+    subparsers.add_parser("uninstall-autostart", help="Remove WishingFn autostart.")
     return parser
 
 

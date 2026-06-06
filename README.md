@@ -13,7 +13,7 @@
 - 智能收藏：自动识别路径、网页 URL 和命令。
 - 收藏夹面板：支持打开、重命名别名、删除收藏。
 - Windows 一条命令安装：安装、更新、卸载都可通过远程脚本完成。
-- GitHub Releases：推送 tag 后自动构建 Windows 发布包。
+- GitHub Releases：推送 tag 后自动构建 Windows/macOS/Linux 发布包。
 
 ## 安装
 
@@ -51,7 +51,7 @@ $env:WISHINGFN_PURGE_DATA="1"; irm https://raw.githubusercontent.com/Karl0007/Wi
 
 ### macOS / Linux
 
-安装命令入口已预留，但 macOS/Linux 发布包还未启用：
+安装命令入口已实现；平台权限仍需要在真机验证：
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Karl0007/WishingFn/main/scripts/install/install.sh | bash

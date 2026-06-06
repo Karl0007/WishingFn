@@ -1,4 +1,4 @@
-name: Release
+﻿name: Release
 
 on:
   push:
@@ -56,3 +56,65 @@ jobs:
             gh release create "${{ github.ref_name }}" --repo "${{ github.repository }}" --title "${{ github.ref_name }}" --notes "Automated WishingFn release ${{ github.ref_name }}"
           }
           gh release upload "${{ github.ref_name }}" dist/WishingFn-windows-x64-${{ github.ref_name }}.zip dist/WishingFn-windows-x64.zip --repo "${{ github.repository }}" --clobber
+
+  build-unix:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            asset: WishingFn-linux-x64
+            kanata: kanata
+          - os: macos-13
+            asset: WishingFn-macos-x64
+            kanata: kanata
+          - os: macos-14
+            asset: WishingFn-macos-arm64
+            kanata: kanata
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Download Kanata
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p vendor/kanata
+          case "${{ matrix.asset }}" in
+            WishingFn-linux-x64) archive="kanata" ;;
+            WishingFn-macos-x64) archive="kanata_macos_cmd_allowed" ;;
+            WishingFn-macos-arm64) archive="kanata_macos_arm64_cmd_allowed" ;;
+            *) echo "Unsupported asset ${{ matrix.asset }}" >&2; exit 1 ;;
+          esac
+          # Best-effort placeholder: Kanata asset names may change; replace during platform verification if needed.
+          curl -fL "https://github.com/jtroo/kanata/releases/download/v1.11.0/${archive}" -o vendor/kanata/kanata
+          chmod +x vendor/kanata/kanata
+
+      - name: Build package
+        shell: bash
+        run: bash scripts/build-unix.sh "${{ github.ref_name }}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset }}
+          path: |
+            dist/${{ matrix.asset }}-*.tar.gz
+            dist/${{ matrix.asset }}.tar.gz
+
+      - name: Publish GitHub release
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release view "${{ github.ref_name }}" --repo "${{ github.repository }}" >/dev/null 2>&1 || \
+            gh release create "${{ github.ref_name }}" --repo "${{ github.repository }}" --title "${{ github.ref_name }}" --notes "Automated WishingFn release ${{ github.ref_name }}"
+          gh release upload "${{ github.ref_name }}" dist/${{ matrix.asset }}-${{ github.ref_name }}.tar.gz dist/${{ matrix.asset }}.tar.gz --repo "${{ github.repository }}" --clobber

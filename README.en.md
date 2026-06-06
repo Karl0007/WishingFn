@@ -13,7 +13,7 @@ A lightweight, packageable CapsLock function-layer tool. WishingFn uses Kanata f
 - Smart favorites: paths, URLs, and commands are detected automatically.
 - Favorites panel: open, rename aliases, and delete entries.
 - One-command Windows install: install, update, and uninstall through remote scripts.
-- GitHub Releases: pushing a tag builds the Windows package automatically.
+- GitHub Releases: pushing a tag builds Windows/macOS/Linux packages automatically.
 
 ## Installation
 
@@ -51,7 +51,7 @@ Default install location:
 
 ### macOS / Linux
 
-Installer entrypoints are reserved, but macOS/Linux packages are not enabled yet:
+Installer entrypoints are implemented; platform permissions and Kanata binary asset names still need real-device verification:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Karl0007/WishingFn/main/scripts/install/install.sh | bash

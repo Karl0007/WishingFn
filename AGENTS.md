@@ -80,7 +80,7 @@ The installer downloads `https://github.com/Karl0007/WishingFn/releases/latest/d
 
 ## macOS / Linux Status
 
-`scripts/install/install.sh` defines the intended command shape, but release artifacts are not implemented yet:
+`scripts/install/install.sh` downloads platform release assets; macOS/Linux runtime permissions and Kanata asset names still need real-device verification:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Karl0007/WishingFn/main/scripts/install/install.sh | bash
@@ -88,7 +88,7 @@ curl -fsSL https://raw.githubusercontent.com/Karl0007/WishingFn/main/scripts/ins
 curl -fsSL https://raw.githubusercontent.com/Karl0007/WishingFn/main/scripts/install/install.sh | bash -s -- uninstall
 ```
 
-To complete macOS/Linux packages, add platform-specific Kanata binaries under `vendor/kanata/kanata`, build with PyInstaller/codesign equivalents, and extend `.github/workflows/release.yml` with Linux/macOS jobs.
+macOS/Linux packaging jobs are present in `.github/workflows/release.yml`; Kanata binary asset names and OS permissions should be verified on real machines.
 
 ## GitHub Release
 
