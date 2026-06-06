@@ -1,118 +1,83 @@
 ﻿# WishingFn
 
-WishingFn is a lightweight cross-platform rewrite of `MagicFn3.ahk` built around:
+WishingFn 是一个轻量的 CapsLock 增强工具：用 `CapsLock` 做功能层，快速移动光标/鼠标，并收藏、打开选中文字或剪贴板里的路径、网页和命令。
 
-- **Kanata** for the CapsLock-based keyboard layer
-- **Python** for clipboard opening, favorites, URLs, and command launching
+## 给人类用户
 
-The released Windows package bundles Kanata, so users do **not** need to install Kanata separately.
+### 快捷键
 
-## Hotkeys
-
-| Hotkey | Action |
+| 快捷键 | 功能 |
 | --- | --- |
-| `CapsLock` tap | Toggle CapsLock |
-| `CapsLock + w/a/s/d` | Arrow keys |
+| 单击 `CapsLock` | 切换大小写 |
+| `CapsLock + w/a/s/d` | 上/左/下/右 |
 | `CapsLock + q/e` | Home / End |
 | `CapsLock + f` | Delete |
 | `CapsLock + Backspace` | Delete |
 | `CapsLock + 1..0,-,=` | F1..F12 |
-| `CapsLock + u/Space/o` | Left click / Left click / Right click |
-| `CapsLock + i/j/k/l` | Mouse movement |
-| `CapsLock + c` | Favorite current clipboard text |
-| `CapsLock + v` | Open current clipboard path or URL, or run clipboard command |
-| `CapsLock + x` | Open favorites panel |
+| `CapsLock + u/Space/o` | 左键 / 左键 / 右键 |
+| `CapsLock + i/j/k/l` | 鼠标移动 |
+| `CapsLock + c` | 收藏当前选中文字；没有选中时收藏剪贴板 |
+| `CapsLock + v` | 打开当前选中文字；没有选中时打开剪贴板 |
+| `CapsLock + x` | 打开收藏夹 |
 
-## Favorites
+### 收藏夹
 
-Clipboard text is saved as one of:
+WishingFn 会自动识别三种收藏：
 
-- `path`: existing or path-like file/folder path
-- `url`: `http://` or `https://` URL
-- `command`: anything else
+- 路径：文件或文件夹
+- 网页：`http://` 或 `https://`
+- 命令：其他文本会作为命令执行
 
-When adding a favorite, WishingFn asks for an alias/display name. In the favorites panel:
+收藏时会让你输入一个别名。收藏夹里可以：
 
-- Double-click or `Enter`: open selected favorite
-- `F2`: rename alias
-- `Delete`: delete selected favorite
+- 双击 / `Enter`：打开
+- `F2`：重命名别名
+- `Delete`：删除
 
-Commands are launched through the system shell. Only favorite commands you trust.
+注意：命令会通过系统 shell 执行，只收藏你信任的命令。
 
-Favorites are stored at:
+### Windows 安装
 
-- Windows: `%APPDATA%\WishingFn\favorites.json`
-- macOS: `~/Library/Application Support/WishingFn/favorites.json`
-- Linux: `$XDG_CONFIG_HOME/wishingfn/favorites.json` or `~/.config/wishingfn/favorites.json`
-
-## Run from source
-
-```powershell
-python -m wishingfn add-clipboard
-python -m wishingfn open-clipboard
-python -m wishingfn menu
-python -m wishingfn run-kanata
-```
-
-`run-kanata` expects a bundled Kanata binary at `vendor/kanata/kanata.exe` on Windows or `vendor/kanata/kanata` on macOS/Linux.
-
-## One-command Windows install
-
-After a GitHub Release exists, install and start WishingFn with one command:
+一条命令安装、设置开机自启动并立即启动：
 
 ```powershell
 irm https://raw.githubusercontent.com/Karl0007/WishingFn/main/install.ps1 | iex
 ```
 
-This downloads the latest `WishingFn-windows-x64-*.zip`, installs to `%LOCALAPPDATA%\WishingFn`, registers Windows logon autostart, and starts bundled Kanata.
-
-## Windows package
-
-Build locally:
+更新到最新版：
 
 ```powershell
-.\scripts\build-windows.ps1 -Version 0.1.0
+irm https://raw.githubusercontent.com/Karl0007/WishingFn/main/update.ps1 | iex
 ```
 
-Install from an extracted package or from `dist\WishingFn` after building:
+卸载并移除开机自启动：
 
 ```powershell
-.\scripts\install-windows.ps1
+irm https://raw.githubusercontent.com/Karl0007/WishingFn/main/uninstall.ps1 | iex
 ```
 
-The installer copies WishingFn to `%LOCALAPPDATA%\WishingFn` and registers a Windows logon task:
-
-```powershell
-WishingFn.exe install-autostart
-```
-
-Remove autostart:
-
-```powershell
-WishingFn.exe uninstall-autostart
-```
-
-Start manually:
-
-```powershell
-WishingFn.exe run-kanata
-```
-
-Kanata may still need elevated permissions depending on Windows input backend and system policy.
-
-## GitHub release
-
-GitHub Actions builds the Windows package automatically when pushing a tag:
-
-```powershell
-git tag v0.1.0
-git push origin v0.1.0
-```
-
-The workflow uploads `WishingFn-windows-x64-<tag>.zip` to the GitHub Release.
-
-## Target repository
+安装位置：
 
 ```text
-git@github.com:Karl0007/WishingFn.git
+%LOCALAPPDATA%\WishingFn
 ```
+
+### macOS / Linux
+
+计划命令如下，但对应发布包还未启用：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Karl0007/WishingFn/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Karl0007/WishingFn/main/install.sh | bash -s -- update
+curl -fsSL https://raw.githubusercontent.com/Karl0007/WishingFn/main/install.sh | bash -s -- uninstall
+```
+
+目前 macOS/Linux 可先参考 `README-AGENT.md` 里的源码运行方式。
+
+## For English Readers
+
+See `README.en.md`.
+
+## For Agents
+
+Implementation, packaging, release, and source-run details live in `README-AGENT.md`.
