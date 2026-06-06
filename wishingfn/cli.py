@@ -324,7 +324,10 @@ def open_path(path: Path) -> None:
 
 def run_command(command: str) -> int:
     if platform.system() == "Windows":
-        subprocess.Popen(command, shell=True, creationflags=subprocess.CREATE_NO_WINDOW)
+        subprocess.Popen(
+            ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", command],
+            creationflags=subprocess.CREATE_NO_WINDOW,
+        )
     else:
         subprocess.Popen(command, shell=True, start_new_session=True)
     return 0
