@@ -1,0 +1,49 @@
+﻿name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Download Kanata
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          New-Item -ItemType Directory -Force vendor\kanata | Out-Null
+          Invoke-WebRequest -Uri "https://github.com/jtroo/kanata/releases/download/v1.11.0/windows-binaries-x64.zip" -OutFile "$env:TEMP\kanata.zip"
+          Expand-Archive -Force "$env:TEMP\kanata.zip" "$env:TEMP\kanata"
+          $exe = Get-ChildItem "$env:TEMP\kanata" -Recurse -Filter "*.exe" | Where-Object { $_.Name -match "cmd_allowed" -and $_.Name -match "winIOv2" -and $_.Name -match "gui" } | Select-Object -First 1
+          if (-not $exe) { throw "Kanata cmd_allowed winIOv2 GUI binary not found" }
+          Copy-Item $exe.FullName vendor\kanata\kanata.exe -Force
+
+      - name: Build package
+        shell: pwsh
+        run: .\scripts\build-windows.ps1 -Version "${{ github.ref_name }}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: WishingFn-windows-x64
+          path: dist/WishingFn-windows-x64-*.zip
+
+      - name: Publish GitHub release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/WishingFn-windows-x64-*.zip

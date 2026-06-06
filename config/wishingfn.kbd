@@ -1,15 +1,8 @@
-﻿# WishingFn Kanata config
-#
-# This is a portable starting point that mirrors MagicFn3's keyboard layer.
-# CapsLock is a tap-hold key:
-# - tap CapsLock: CapsLock
-# - hold CapsLock: WishingFn layer
-#
-# The command aliases call Python directly so this works before packaging.
-# If you install a packaged executable, replace them with:
-#   cmd wishingfn add-clipboard
-#   cmd wishingfn open-clipboard
-#   cmd wishingfn menu
+;; WishingFn Kanata config
+;;
+;; CapsLock is a tap-hold key:
+;; - tap CapsLock: CapsLock
+;; - hold CapsLock: WishingFn layer
 
 (defcfg
   process-unmapped-keys yes
@@ -27,9 +20,9 @@
 
 (defalias
   fn (tap-hold 150 150 caps (layer-toggle wishingfn))
-  fav-add (cmd python -m wishingfn add-clipboard)
-  clip-open (cmd python -m wishingfn open-clipboard)
-  fav-menu (cmd python -m wishingfn menu)
+  fav-add (cmd wishingfn add-clipboard)
+  clip-open (cmd wishingfn open-clipboard)
+  fav-menu (cmd wishingfn menu)
   ms-up (movemouse-accel-up 1 500 2 20)
   ms-left (movemouse-accel-left 1 500 2 20)
   ms-down (movemouse-accel-down 1 500 2 20)

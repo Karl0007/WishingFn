@@ -5,5 +5,8 @@ venv/
 dist/
 build/
 *.spec
+*.out
+*.err
+*_log.txt
 .DS_Store
 Thumbs.db

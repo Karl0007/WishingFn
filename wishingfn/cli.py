@@ -5,8 +5,10 @@ import platform
 import shutil
 import subprocess
 import sys
+import webbrowser
 from dataclasses import dataclass
 from pathlib import Path
+from urllib.parse import urlparse
 
 APP_NAME = "WishingFn"
 
@@ -16,6 +18,37 @@ class Favorite:
     kind: str
     value: str
     label: str
+
+
+def app_root() -> Path:
+    if getattr(sys, "frozen", False):
+        return Path(sys.executable).resolve().parent
+    return Path(__file__).resolve().parents[1]
+
+
+def resource_root() -> Path:
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        return Path(sys._MEIPASS)
+    return app_root()
+
+
+def bundled_kanata() -> Path:
+    name = "kanata.exe" if platform.system() == "Windows" else "kanata"
+    roots = [app_root(), resource_root()]
+    for root in roots:
+        candidate = root / "vendor" / "kanata" / name
+        if candidate.exists():
+            return candidate
+    return roots[-1] / "vendor" / "kanata" / name
+
+
+def bundled_config() -> Path:
+    roots = [app_root(), resource_root()]
+    for root in roots:
+        candidate = root / "config" / "wishingfn.kbd"
+        if candidate.exists():
+            return candidate
+    return roots[-1] / "config" / "wishingfn.kbd"
 
 
 def config_dir() -> Path:
@@ -68,9 +101,16 @@ def read_clipboard() -> str:
 
 
 def infer_kind(value: str) -> str:
+    if looks_like_url(value):
+        return "url"
     if looks_like_path(value):
         return "path"
     return "command"
+
+
+def looks_like_url(value: str) -> bool:
+    parsed = urlparse(value)
+    return parsed.scheme in {"http", "https"} and bool(parsed.netloc)
 
 
 def looks_like_path(value: str) -> bool:
@@ -117,7 +157,23 @@ def default_label(kind: str, value: str) -> str:
     if kind == "path":
         name = expand_path(value).name
         return name or value
+    if kind == "url":
+        parsed = urlparse(value)
+        return parsed.netloc or value
     return value.splitlines()[0][:80]
+
+
+def ask_label(default: str) -> str:
+    try:
+        from tkinter import Tk, simpledialog
+
+        root = Tk()
+        root.withdraw()
+        label = simpledialog.askstring("WishingFn", "Alias / display name:", initialvalue=default)
+        root.destroy()
+        return (label or default).strip()
+    except Exception:
+        return default
 
 
 def add_clipboard() -> int:
@@ -130,9 +186,10 @@ def add_clipboard() -> int:
     if any(favorite.value == value for favorite in favorites):
         notify("WishingFn", "Already favorited.")
         return 0
-    favorites.append(Favorite(kind=kind, value=value, label=default_label(kind, value)))
+    label = ask_label(default_label(kind, value))
+    favorites.append(Favorite(kind=kind, value=value, label=label))
     save_favorites(favorites)
-    notify("WishingFn", f"Favorited {kind}: {value}")
+    notify("WishingFn", f"Favorited {kind}: {label}")
     return 0
 
 
@@ -145,6 +202,9 @@ def open_clipboard() -> int:
 
 
 def open_value(value: str, kind: str) -> int:
+    if kind == "url":
+        webbrowser.open(value)
+        return 0
     if kind == "path":
         path = expand_path(value)
         if not path.exists():
@@ -174,12 +234,12 @@ def run_command(command: str) -> int:
 
 
 def menu() -> int:
-    from tkinter import Button, END, LEFT, RIGHT, SINGLE, BOTH, X, Y, Frame, Listbox, Scrollbar, Tk, messagebox
+    from tkinter import Button, END, LEFT, RIGHT, SINGLE, BOTH, X, Y, Frame, Listbox, Scrollbar, Tk, messagebox, simpledialog
 
     favorites = load_favorites()
     root = Tk()
     root.title("WishingFn Favorites")
-    root.geometry("760x420")
+    root.geometry("820x460")
 
     frame = Frame(root)
     frame.pack(fill=BOTH, expand=True, padx=10, pady=10)
@@ -210,12 +270,25 @@ def menu() -> int:
         if open_value(favorite.value, favorite.kind) == 0:
             root.destroy()
 
+    def rename_selected(event=None) -> None:
+        index = selected_index()
+        if index is None:
+            return
+        favorite = favorites[index]
+        label = simpledialog.askstring("WishingFn", "Alias / display name:", initialvalue=favorite.label, parent=root)
+        if not label:
+            return
+        favorites[index] = Favorite(kind=favorite.kind, value=favorite.value, label=label.strip())
+        save_favorites(favorites)
+        refresh()
+        listbox.selection_set(index)
+
     def delete_selected(event=None) -> None:
         index = selected_index()
         if index is None:
             return
         favorite = favorites[index]
-        if messagebox.askyesno("WishingFn", f"Delete favorite?\n\n{favorite.value}"):
+        if messagebox.askyesno("WishingFn", f"Delete favorite?\n\n{favorite.label}\n{favorite.value}"):
             del favorites[index]
             save_favorites(favorites)
             refresh()
@@ -223,11 +296,13 @@ def menu() -> int:
     buttons = Frame(root)
     buttons.pack(fill=X, padx=10, pady=(0, 10))
     Button(buttons, text="Open", command=open_selected).pack(side=LEFT, padx=(0, 8))
+    Button(buttons, text="Rename", command=rename_selected).pack(side=LEFT, padx=(0, 8))
     Button(buttons, text="Delete", command=delete_selected).pack(side=LEFT, padx=(0, 8))
     Button(buttons, text="Close", command=root.destroy).pack(side=LEFT)
 
     listbox.bind("<Double-Button-1>", open_selected)
     listbox.bind("<Return>", open_selected)
+    listbox.bind("<F2>", rename_selected)
     listbox.bind("<Delete>", delete_selected)
     refresh()
     if favorites:
@@ -253,13 +328,60 @@ def print_config_path() -> int:
     return 0
 
 
+def run_kanata() -> int:
+    kanata = bundled_kanata()
+    config = bundled_config()
+    if not kanata.exists():
+        raise RuntimeError(f"Bundled Kanata not found: {kanata}")
+    if not config.exists():
+        raise RuntimeError(f"Kanata config not found: {config}")
+    env = os.environ.copy()
+    env["PATH"] = str(app_root()) + os.pathsep + env.get("PATH", "")
+    return subprocess.call([str(kanata), "--cfg", str(config)], env=env)
+
+
+def install_autostart() -> int:
+    system = platform.system()
+    if system != "Windows":
+        notify("WishingFn", "Autostart installer currently supports Windows. Use the README commands for macOS/Linux.")
+        return 1
+    exe = Path(sys.executable).resolve() if getattr(sys, "frozen", False) else Path(sys.argv[0]).resolve()
+    command = f'"{exe}" run-kanata'
+    subprocess.run([
+        "schtasks",
+        "/Create",
+        "/TN",
+        "WishingFn",
+        "/TR",
+        command,
+        "/SC",
+        "ONLOGON",
+        "/RL",
+        "HIGHEST",
+        "/F",
+    ], check=True)
+    notify("WishingFn", "Installed Windows autostart task: WishingFn")
+    return 0
+
+
+def uninstall_autostart() -> int:
+    if platform.system() != "Windows":
+        return 1
+    subprocess.run(["schtasks", "/Delete", "/TN", "WishingFn", "/F"], check=False)
+    notify("WishingFn", "Removed Windows autostart task: WishingFn")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="wishingfn", description="Lightweight favorites and clipboard opener for MagicFn-style workflows.")
     subparsers = parser.add_subparsers(dest="command", required=True)
-    subparsers.add_parser("add-clipboard", help="Favorite the current clipboard text as a path or command.")
-    subparsers.add_parser("open-clipboard", help="Open the current clipboard path or run it as a command.")
+    subparsers.add_parser("add-clipboard", help="Favorite the current clipboard text as a path, URL, or command.")
+    subparsers.add_parser("open-clipboard", help="Open the current clipboard path/URL, or run it as a command.")
     subparsers.add_parser("menu", help="Open the favorites panel.")
     subparsers.add_parser("config-path", help="Print the favorites file path.")
+    subparsers.add_parser("run-kanata", help="Run bundled Kanata with WishingFn config.")
+    subparsers.add_parser("install-autostart", help="Install WishingFn as a Windows logon task.")
+    subparsers.add_parser("uninstall-autostart", help="Remove the Windows logon task.")
     return parser
 
 
@@ -274,7 +396,15 @@ def main(argv: list[str] | None = None) -> int:
             return menu()
         if args.command == "config-path":
             return print_config_path()
+        if args.command == "run-kanata":
+            return run_kanata()
+        if args.command == "install-autostart":
+            return install_autostart()
+        if args.command == "uninstall-autostart":
+            return uninstall_autostart()
     except Exception as exc:
         notify("WishingFn", str(exc))
         return 1
     return 1
+
+
