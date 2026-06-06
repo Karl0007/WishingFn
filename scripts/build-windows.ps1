@@ -1,4 +1,4 @@
-﻿param(
+param(
     [string]$Version = "0.1.0"
 )
 
@@ -21,4 +21,6 @@ Copy-Item scripts\install\update.ps1 $PackageDir -Force
 Copy-Item scripts\install\uninstall.ps1 $PackageDir -Force
 Copy-Item scripts\install\install-latest-windows.ps1 $PackageDir -Force
 Compress-Archive -Force -Path (Join-Path $PackageDir "*") -DestinationPath (Join-Path $Root "dist\WishingFn-windows-x64-$Version.zip")
+Copy-Item (Join-Path $Root "dist\WishingFn-windows-x64-$Version.zip") (Join-Path $Root "dist\WishingFn-windows-x64.zip") -Force
 Write-Host "Built dist\WishingFn-windows-x64-$Version.zip"
+Write-Host "Built dist\WishingFn-windows-x64.zip"

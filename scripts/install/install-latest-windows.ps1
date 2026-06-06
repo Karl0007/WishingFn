@@ -21,14 +21,7 @@ function Remove-Autostart {
 function Get-LatestReleaseAssetUrl {
     param([string]$Repository)
 
-    $ApiUrl = "https://api.github.com/repos/$Repository/releases/latest"
-    $Headers = @{ "User-Agent" = "WishingFn-Installer" }
-    $Release = Invoke-RestMethod -Uri $ApiUrl -Headers $Headers
-    $Asset = $Release.assets | Where-Object { $_.name -like "WishingFn-windows-x64-*.zip" } | Select-Object -First 1
-    if (-not $Asset) {
-        throw "No WishingFn Windows zip asset found in latest release: $($Release.tag_name)"
-    }
-    return $Asset.browser_download_url
+    return "https://github.com/$Repository/releases/latest/download/WishingFn-windows-x64.zip"
 }
 
 function Install-Or-Update {

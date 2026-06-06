@@ -75,7 +75,7 @@ irm https://raw.githubusercontent.com/Karl0007/WishingFn/main/scripts/install/un
 
 Implementation: `scripts/install/install-latest-windows.ps1`.
 
-The installer downloads the latest GitHub Release asset matching `WishingFn-windows-x64-*.zip`.
+The installer downloads `https://github.com/Karl0007/WishingFn/releases/latest/download/WishingFn-windows-x64.zip` directly to avoid GitHub API rate limits.
 
 ## macOS / Linux Status
 

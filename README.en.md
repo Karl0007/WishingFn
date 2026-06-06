@@ -1,6 +1,6 @@
 # WishingFn
 
-[中文](README.md) · [Agent Notes](AGENTS.md)
+[涓枃](README.md) 路 [Agent Notes](AGENTS.md)
 
 A lightweight, packageable CapsLock function-layer tool. WishingFn uses Kanata for the keyboard layer and Python for favorites, path/URL opening, and command launching.
 
