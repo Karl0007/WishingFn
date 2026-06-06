@@ -56,6 +56,16 @@ python -m wishingfn run-kanata
 
 `run-kanata` expects a bundled Kanata binary at `vendor/kanata/kanata.exe` on Windows or `vendor/kanata/kanata` on macOS/Linux.
 
+## One-command Windows install
+
+After a GitHub Release exists, install and start WishingFn with one command:
+
+```powershell
+irm https://raw.githubusercontent.com/Karl0007/WishingFn/main/install.ps1 | iex
+```
+
+This downloads the latest `WishingFn-windows-x64-*.zip`, installs to `%LOCALAPPDATA%\WishingFn`, registers Windows logon autostart, and starts bundled Kanata.
+
 ## Windows package
 
 Build locally:
