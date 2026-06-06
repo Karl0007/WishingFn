@@ -51,7 +51,7 @@ Default install location:
 
 ### macOS / Linux
 
-Installer entrypoints are implemented; platform permissions and Kanata binary asset names still need real-device verification:
+Installer entrypoints are implemented; platform permissions still need real-device verification: macOS needs Accessibility permissions, and Linux may need uinput plus clipboard-tool permissions.
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Karl0007/WishingFn/main/scripts/install/install.sh | bash

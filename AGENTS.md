@@ -9,7 +9,9 @@ WishingFn is split into two layers:
 - Kanata keyboard layer: `config/wishingfn.kbd`
 - Python feature layer: `wishingfn/cli.py`
 
-The Windows release package bundles Kanata at `vendor/kanata/kanata.exe`; users do not need to install Kanata separately.
+Release packages bundle Kanata under `vendor/kanata`; users do not need to install Kanata separately.
+
+Kanata config template: `config/wishingfn.kbd` uses `__WISHINGFN_CMD__`. `run-kanata` materializes a platform-specific config under the WishingFn config directory, using `wishingfn.cmd` on Windows and `wishingfn` on macOS/Linux.
 
 ## Python Commands
 
@@ -22,7 +24,7 @@ python -m wishingfn install-autostart
 python -m wishingfn uninstall-autostart
 ```
 
-`add-clipboard` and `open-clipboard` actually prefer selected text first. They temporarily send copy, read the selection, restore the previous clipboard when possible, and fall back to clipboard if no selection is found.
+`add-clipboard` and `open-clipboard` actually prefer selected text first. They temporarily send copy, read the selection, restore the previous clipboard when it was readable, and fall back to clipboard if no selection is found. Empty Linux clipboard errors such as `CLIPBOARD selection doesn't exist` should be treated as empty clipboard, not as user-facing failures.
 
 ## Data
 
@@ -80,7 +82,7 @@ The installer downloads `https://github.com/Karl0007/WishingFn/releases/latest/d
 
 ## macOS / Linux Status
 
-`scripts/install/install.sh` downloads platform release assets; macOS/Linux runtime permissions and Kanata asset names still need real-device verification:
+`scripts/install/install.sh` downloads platform release assets; macOS/Linux runtime permissions still need real-device verification:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Karl0007/WishingFn/main/scripts/install/install.sh | bash
@@ -88,7 +90,7 @@ curl -fsSL https://raw.githubusercontent.com/Karl0007/WishingFn/main/scripts/ins
 curl -fsSL https://raw.githubusercontent.com/Karl0007/WishingFn/main/scripts/install/install.sh | bash -s -- uninstall
 ```
 
-macOS/Linux packaging jobs are present in `.github/workflows/release.yml`; Kanata binary asset names and OS permissions should be verified on real machines.
+macOS/Linux packaging jobs are present in `.github/workflows/release.yml`. The workflow downloads Kanata v1.11.0 zip assets (`linux-binaries-x64.zip`, `macos-binaries-x64.zip`, `macos-binaries-arm64.zip`) and picks a `cmd_allowed` binary when present. OS permissions should be verified on real machines.
 
 ## GitHub Release
 

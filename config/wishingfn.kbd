@@ -20,9 +20,9 @@
 
 (defalias
   fn (tap-hold 150 150 caps (layer-toggle wishingfn))
-  fav-add (cmd wishingfn.cmd add-clipboard)
-  clip-open (cmd wishingfn.cmd open-clipboard)
-  fav-menu (cmd wishingfn.cmd menu)
+  fav-add (cmd __WISHINGFN_CMD__ add-clipboard)
+  clip-open (cmd __WISHINGFN_CMD__ open-clipboard)
+  fav-menu (cmd __WISHINGFN_CMD__ menu)
   ms-up (movemouse-accel-up 1 1000 1 5)
   ms-left (movemouse-accel-left 1 1000 1 5)
   ms-down (movemouse-accel-down 1 1000 1 5)

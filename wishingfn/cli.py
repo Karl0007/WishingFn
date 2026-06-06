@@ -12,6 +12,12 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 APP_NAME = "WishingFn"
+EMPTY_CLIPBOARD_MARKERS = (
+    "CLIPBOARD selection doesn't exist",
+    "selection doesn't exist",
+    "target STRING not available",
+    "target \"STRING\" not available",
+)
 
 
 @dataclass(frozen=True)
@@ -52,6 +58,25 @@ def bundled_config() -> Path:
     return roots[-1] / "config" / "wishingfn.kbd"
 
 
+def command_launcher() -> str:
+    if platform.system() == "Windows":
+        return "wishingfn.cmd"
+    return "wishingfn"
+
+
+def runtime_config_path() -> Path:
+    return config_dir() / "wishingfn.kbd"
+
+
+def materialize_runtime_config(config: Path) -> Path:
+    rendered = config.read_text(encoding="utf-8").replace("__WISHINGFN_CMD__", command_launcher())
+    target = runtime_config_path()
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if not target.exists() or target.read_text(encoding="utf-8") != rendered:
+        target.write_text(rendered, encoding="utf-8", newline="\n")
+    return target
+
+
 def config_dir() -> Path:
     system = platform.system()
     if system == "Windows":
@@ -73,6 +98,27 @@ def normalize_clipboard_text(text: str) -> str:
     return text
 
 
+def is_empty_clipboard_error(message: str) -> bool:
+    return any(marker.lower() in message.lower() for marker in EMPTY_CLIPBOARD_MARKERS)
+
+
+def should_accept_copied_selection(previous: str, current: str, had_previous: bool) -> bool:
+    if not current:
+        return False
+    if not had_previous:
+        return True
+    return current != previous
+
+
+def restore_clipboard(previous: str, had_previous: bool) -> None:
+    if not had_previous:
+        return
+    try:
+        write_clipboard(previous)
+    except Exception:
+        pass
+
+
 def read_clipboard() -> str:
     system = platform.system()
     if system == "Windows":
@@ -85,7 +131,10 @@ def read_clipboard() -> str:
             root.destroy()
             return normalize_clipboard_text(text)
         except Exception as exc:
-            raise RuntimeError(f"Unable to read clipboard: {exc}") from exc
+            message = str(exc)
+            if is_empty_clipboard_error(message):
+                return ""
+            raise RuntimeError(f"Unable to read clipboard: {message}") from exc
 
     candidates = []
     if system == "Darwin":
@@ -98,6 +147,9 @@ def read_clipboard() -> str:
             completed = subprocess.run(command, check=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             if completed.returncode == 0:
                 return normalize_clipboard_text(completed.stdout)
+            error = (completed.stderr or completed.stdout or "").strip()
+            if is_empty_clipboard_error(error):
+                return ""
     raise RuntimeError("No supported clipboard command found.")
 
 
@@ -153,10 +205,13 @@ def copy_selection_to_clipboard() -> None:
 
 def read_selected_text(timeout: float = 0.8) -> str:
     previous = ""
+    had_previous = False
     try:
         previous = read_clipboard()
+        had_previous = True
     except Exception:
         previous = ""
+        had_previous = False
 
     try:
         copy_selection_to_clipboard()
@@ -164,25 +219,20 @@ def read_selected_text(timeout: float = 0.8) -> str:
         return ""
 
     deadline = time.monotonic() + timeout
-    latest = ""
+    selected = ""
     while time.monotonic() < deadline:
         time.sleep(0.05)
         try:
             current = read_clipboard()
         except Exception:
             continue
-        if current:
-            latest = current
-        if current and current != previous:
+        if should_accept_copied_selection(previous, current, had_previous):
+            selected = current
             break
 
-    if previous:
-        try:
-            write_clipboard(previous)
-        except Exception:
-            pass
+    restore_clipboard(previous, had_previous)
 
-    return latest
+    return selected
 
 
 def read_target_text() -> str:
@@ -329,7 +379,7 @@ def run_command(command: str) -> int:
             creationflags=subprocess.CREATE_NO_WINDOW,
         )
     else:
-        subprocess.Popen(command, shell=True, start_new_session=True)
+        subprocess.Popen(command, shell=True, start_new_session=True, executable=shutil.which("bash") or None)
     return 0
 
 
@@ -437,6 +487,7 @@ def run_kanata() -> int:
         raise RuntimeError(f"Bundled Kanata not found: {kanata}")
     if not config.exists():
         raise RuntimeError(f"Kanata config not found: {config}")
+    config = materialize_runtime_config(config)
     env = os.environ.copy()
     env["PATH"] = str(app_root()) + os.pathsep + env.get("PATH", "")
     if platform.system() == "Windows":

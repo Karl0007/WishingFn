@@ -87,13 +87,23 @@ jobs:
           set -euo pipefail
           mkdir -p vendor/kanata
           case "${{ matrix.asset }}" in
-            WishingFn-linux-x64) archive="kanata" ;;
-            WishingFn-macos-x64) archive="kanata_macos_cmd_allowed" ;;
-            WishingFn-macos-arm64) archive="kanata_macos_arm64_cmd_allowed" ;;
+            WishingFn-linux-x64) archive="linux-binaries-x64.zip" ;;
+            WishingFn-macos-x64) archive="macos-binaries-x64.zip" ;;
+            WishingFn-macos-arm64) archive="macos-binaries-arm64.zip" ;;
             *) echo "Unsupported asset ${{ matrix.asset }}" >&2; exit 1 ;;
           esac
-          # Best-effort placeholder: Kanata asset names may change; replace during platform verification if needed.
-          curl -fL "https://github.com/jtroo/kanata/releases/download/v1.11.0/${archive}" -o vendor/kanata/kanata
+          curl -fL "https://github.com/jtroo/kanata/releases/download/v1.11.0/${archive}" -o "$RUNNER_TEMP/kanata.zip"
+          unzip -q "$RUNNER_TEMP/kanata.zip" -d "$RUNNER_TEMP/kanata"
+          candidate="$(find "$RUNNER_TEMP/kanata" -type f -name '*cmd_allowed*' | head -n 1)"
+          if [[ -z "$candidate" ]]; then
+            candidate="$(find "$RUNNER_TEMP/kanata" -type f -name 'kanata*' | head -n 1)"
+          fi
+          if [[ -z "$candidate" ]]; then
+            echo "Kanata binary not found in ${archive}" >&2
+            find "$RUNNER_TEMP/kanata" -type f >&2
+            exit 1
+          fi
+          cp "$candidate" vendor/kanata/kanata
           chmod +x vendor/kanata/kanata
 
       - name: Build package
