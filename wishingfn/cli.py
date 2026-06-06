@@ -60,6 +60,8 @@ def bundled_config() -> Path:
 
 def command_launcher() -> str:
     if platform.system() == "Windows":
+        if (app_root() / "WishingFn.exe").exists():
+            return "WishingFn.exe"
         return "wishingfn.cmd"
     return "wishingfn"
 
@@ -373,14 +375,50 @@ def open_path(path: Path) -> None:
 
 
 def run_command(command: str) -> int:
-    if platform.system() == "Windows":
+    system = platform.system()
+    if system == "Windows":
         subprocess.Popen(
-            ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", command],
-            creationflags=subprocess.CREATE_NO_WINDOW,
+            ["powershell.exe", "-NoExit", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", command],
+            creationflags=subprocess.CREATE_NEW_CONSOLE,
         )
+    elif system == "Darwin":
+        script = f'''
+tell application "Terminal"
+  activate
+  do script {json.dumps(command)}
+end tell
+'''
+        subprocess.Popen(["osascript", "-e", script])
     else:
-        subprocess.Popen(command, shell=True, start_new_session=True, executable=shutil.which("bash") or None)
+        terminal = find_linux_terminal()
+        if terminal:
+            subprocess.Popen(terminal_command(terminal, command), start_new_session=True)
+        else:
+            subprocess.Popen(command, shell=True, start_new_session=True, executable=shutil.which("bash") or None)
     return 0
+
+
+def find_linux_terminal() -> str | None:
+    for name in ("wt", "gnome-terminal", "konsole", "xfce4-terminal", "xterm"):
+        path = shutil.which(name)
+        if path:
+            return path
+    return None
+
+
+def terminal_command(terminal: str, command: str) -> list[str]:
+    name = Path(terminal).name.lower()
+    shell = shutil.which("bash") or shutil.which("sh") or "sh"
+    hold = f'{command}; printf "\n[WishingFn] Command finished. Press Enter to close..."; read _'
+    if name == "wt":
+        return [terminal, shell, "-lc", hold]
+    if name == "gnome-terminal":
+        return [terminal, "--", shell, "-lc", hold]
+    if name == "konsole":
+        return [terminal, "--hold", "-e", shell, "-lc", command]
+    if name == "xfce4-terminal":
+        return [terminal, "--hold", "-e", f'{shell} -lc {json.dumps(command)}']
+    return [terminal, "-hold", "-e", shell, "-lc", command]
 
 
 def menu() -> int:
