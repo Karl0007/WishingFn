@@ -1,18 +1,21 @@
-﻿param(
-    [ValidateSet("install", "update", "uninstall")]
-    [string]$Action = "install",
-    [string]$InstallDir = "$env:LOCALAPPDATA\WishingFn",
-    [string]$Repository = "Karl0007/WishingFn"
-)
-
+$Action = if ($env:WISHINGFN_ACTION) { $env:WISHINGFN_ACTION } else { "install" }
+$InstallDir = if ($env:WISHINGFN_INSTALL_DIR) { $env:WISHINGFN_INSTALL_DIR } else { Join-Path $env:LOCALAPPDATA "WishingFn" }
+$Repository = if ($env:WISHINGFN_REPO) { $env:WISHINGFN_REPO } else { "Karl0007/WishingFn" }
 $ErrorActionPreference = "Stop"
+
+if ($Action -notin @("install", "update", "uninstall")) {
+    throw "Unsupported WISHINGFN_ACTION: $Action"
+}
 
 function Stop-WishingFn {
     Get-Process | Where-Object { $_.ProcessName -like "kanata*" -or $_.ProcessName -eq "WishingFn" } | Stop-Process -Force -ErrorAction SilentlyContinue
 }
 
 function Remove-Autostart {
-    schtasks /Delete /TN WishingFn /F 2>$null | Out-Null
+    $PreviousPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    cmd /c "schtasks /Delete /TN WishingFn /F >nul 2>nul" | Out-Null
+    $ErrorActionPreference = $PreviousPreference
 }
 
 function Get-LatestReleaseAssetUrl {
@@ -82,3 +85,4 @@ if ($Action -eq "uninstall") {
 
 $Verb = if ($Action -eq "update") { "Updating" } else { "Installing" }
 Install-Or-Update -InstallDir $InstallDir -Repository $Repository -Verb $Verb
+
